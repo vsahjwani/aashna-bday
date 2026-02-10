@@ -381,7 +381,6 @@
 
         <div class="controls">
           <button id="spinBtn" class="primary">Spin 🎯</button>
-          <button id="resetBtn">Reset Wheel</button>
           <button id="clearLogBtn">Clear Results</button>
         </div>
       </div>
@@ -555,7 +554,6 @@
         ctx.fillText("All items removed ✨", 0, -10);
         ctx.font = `600 ${Math.floor(w*0.024)}px ui-sans-serif, system-ui`;
         ctx.fillStyle = "rgba(255,255,255,0.62)";
-        ctx.fillText("Reset wheel to play again.", 0, 28);
         ctx.restore();
         updateUI();
         return;
