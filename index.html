@@ -127,7 +127,7 @@
       position:absolute;
       top:-6px;
       left:50%;
-      transform: translateX(-50%);
+      transform: translateX(-50%) rotate(180deg);
       width: 0; height: 0;
       border-left: 18px solid transparent;
       border-right: 18px solid transparent;
@@ -368,7 +368,7 @@
       <div class="header">
         <div class="title">
           <h1>Spin the Wheel</h1>
-          <p class="sub">Open the page → hit spin → claim your vibe. Remove to lock it in + delete it from the wheel.</p>
+          <p class="sub">🤪🤭🥳</p>
         </div>
         <div class="pill"><span class="dot"></span><span id="remainingPill">Remaining: —</span></div>
       </div>
@@ -380,7 +380,7 @@
         </div>
 
         <div class="controls">
-          <button id="spinBtn" class="primary">Spin 🎯</button>
+          <button id="spinBtn" class="primary">Spin!!</button>
           <button id="clearLogBtn">Clear Results</button>
         </div>
       </div>
@@ -391,7 +391,7 @@
       <div class="header">
         <div class="title">
           <h1>Results</h1>
-          <p class="sub">Stored on this device (localStorage). If you refresh, it stays.</p>
+          <p class="sub">🍾🔝🎉</p>
         </div>
       </div>
       <div class="sideBody">
@@ -475,14 +475,13 @@
       "dress like a bratz doll"
     ];
 
-    // 6-color palette (repeats)
+    // color palette (repeats)
     const COLORS = [
-      "#FF6B6B", // red
-      "#FFD93D", // orange
-      "#2ED6C0", // yellow
-      "#B388FF", // blue
-      "#FF9F7F", // pink
-      "#4DA8FF"  // dark yellow
+      "#99004c", // red
+      "#cc0066", // orange
+      "#ff0080", // yellow
+      "#ff66b2", // blue
+      "#ffb2d8", // pink
     ];
 
     /********************
@@ -502,7 +501,7 @@
     let angle = 0;       // current angle in radians
     let angVel = 0;      // angular velocity
     let targetMinSpins = 5; // minimum spins (aesthetic)
-    let friction = 0.985;   // decay
+    let friction = 0.96;   // decay
     let lastWinner = null;  // string
 
     /********************
