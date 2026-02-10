@@ -658,7 +658,6 @@
      * Spin Logic
      ********************/
     const spinBtn = document.getElementById("spinBtn");
-    const resetBtn = document.getElementById("resetBtn");
     const clearLogBtn = document.getElementById("clearLogBtn");
 
     spinBtn.addEventListener("click", () => {
@@ -753,7 +752,6 @@ clearLogBtn.addEventListener("click", async () => {
         openModal(winner);
 
         spinBtn.disabled = false;
-        resetBtn.disabled = false;
         clearLogBtn.disabled = false;
         return;
       }
