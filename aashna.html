@@ -672,20 +672,38 @@
       startSpin();
     });
 
-    resetBtn.addEventListener("click", () => {
-      entries = [...INITIAL_ENTRIES];
-      saveEntries(entries);
-      drawWheel();
-      toast("Wheel reset.");
-    });
 
-    clearLogBtn.addEventListener("click", () => {
-      log = [];
-      saveLog(log);
-      renderLog();
-      toast("Results cleared.");
-      updateUI();
-    });
+
+
+
+
+
+
+
+
+    resetBtn.addEventListener("click", async () => {
+  try{
+    const r = await apiReset();
+    if(!r.ok) throw new Error(r.error || "reset failed");
+    toast("Wheel reset for everyone.");
+    await syncFromSheet();
+  } catch {
+    toast("Reset failed. Check API.");
+  }
+});
+
+clearLogBtn.addEventListener("click", async () => {
+  try{
+    const r = await apiClearResults();
+    if(!r.ok) throw new Error(r.error || "clear failed");
+    toast("Results cleared for everyone.");
+    await syncFromSheet();
+  } catch {
+    toast("Clear failed. Check API.");
+  }
+});
+
+
 
     function startSpin(){
       isSpinning = true;
@@ -821,37 +839,64 @@
       toast("Respin whenever ✨");
     });
 
-    // Remove = store name+item and remove from wheel
-    removeBtn.addEventListener("click", () => {
-      if(!lastWinner){
-        toast("No selection to remove.");
-        return;
-      }
-      const name = (nameInput.value || "").trim();
-      if(!name){
-        toast("Add your name first.");
-        nameInput.focus();
-        return;
-      }
 
-      // Save to log
-      const record = { name, item: lastWinner, timeISO: new Date().toISOString() };
-      log.unshift(record);
-      saveLog(log);
 
-      // Remove item from wheel
-      const idx = entries.indexOf(lastWinner);
-      if(idx !== -1){
-        entries.splice(idx, 1);
-        saveEntries(entries);
-      }
 
-      closeModal();
-      drawWheel();
-      renderLog();
 
-      toast(`Saved: ${name} → ${record.item}`);
-    });
+
+
+
+
+
+
+    removeBtn.addEventListener("click", async () => {
+  if(!lastWinner){
+    toast("No selection to remove.");
+    return;
+  }
+  const name = (nameInput.value || "").trim();
+  if(!name){
+    toast("Add your name first.");
+    nameInput.focus();
+    return;
+  }
+
+  removeBtn.disabled = true;
+
+  try {
+    const result = await apiClaim(lastWinner, name);
+
+    if (!result.ok) {
+      toast(result.error || "Could not claim. Try again.");
+      // someone else might have taken it — resync
+      await syncFromSheet();
+      return;
+    }
+
+    closeModal();
+    toast(`Saved: ${name} → ${lastWinner}`);
+
+    // Pull latest shared state
+    await syncFromSheet();
+
+  } catch (e) {
+    toast("API error. Check your Apps Script deploy URL.");
+  } finally {
+    removeBtn.disabled = false;
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
+
 
     // Escape closes modal
     window.addEventListener("keydown", (e) => {
@@ -964,25 +1009,64 @@
 
     const API_URL = "https://script.google.com/macros/s/AKfycbxwRSDofQCd44HqiTmt2r8FqpZ23ewtmIWIMZ0fn3TKKwQbgpE5JZjiA-vpQh51G-lcRA/exec";
 
-async function loadItems() {
+async function apiGetAll() {
   const res = await fetch(API_URL);
   const data = await res.json();
-  if (!data.ok) throw new Error("Failed to load");
-
-  // available = not taken
-  const available = data.items.filter(x => !x.takenBy).map(x => x.item);
-  return available;
+  if (!data.ok) throw new Error(data.error || "API GET failed");
+  return data.items; // [{item,takenBy,takenAt}]
 }
 
-async function takeItem(item, name) {
+async function apiClaim(item, name) {
   const res = await fetch(API_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ item, name })
+    body: JSON.stringify({ action: "claim", item, name })
   });
   const data = await res.json();
-  return data; // {ok:true} or {ok:false,error:"..."}
+  return data;
 }
+
+async function apiReset() {
+  const res = await fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "reset" })
+  });
+  return await res.json();
+}
+
+async function apiClearResults() {
+  const res = await fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "clearResults" })
+  });
+  return await res.json();
+}
+
+async function syncFromSheet() {
+  const items = await apiGetAll();
+
+  // entries = only untaken items
+  entries = items.filter(x => !x.takenBy).map(x => x.item);
+
+  // log = taken items (newest first)
+  log = items
+    .filter(x => x.takenBy)
+    .sort((a,b) => (b.takenAt || "").localeCompare(a.takenAt || ""))
+    .map(x => ({ name: x.takenBy, item: x.item, timeISO: x.takenAt }));
+
+  drawWheel();
+  renderLog();
+}
+
+
+
+
+
+
+
+
 
 
 
@@ -1011,16 +1095,25 @@ async function takeItem(item, name) {
     /********************
      * Init
      ********************/
-    renderLog();
-    // Wait a tick so canvas has CSS size
-    requestAnimationFrame(() => {
-      resizeCanvasForDPR();
-      updateUI();
-    });
+    (async function init(){
+  angle = Math.random() * Math.PI*2;
 
-    // Optional: start with a gentle random angle so it doesn't look "flat"
-    angle = Math.random() * Math.PI*2;
-    drawWheel();
+  requestAnimationFrame(() => {
+    resizeCanvasForDPR();
+  });
+
+  try {
+    await syncFromSheet();
+    toast("Synced ✅");
+  } catch (e) {
+    toast("Could not load shared wheel (API URL?)");
+    // fallback to local if you want:
+    // entries = [...INITIAL_ENTRIES];
+    // log = [];
+    // drawWheel(); renderLog();
+  }
+})();
+
   </script>
 </body>
 </html>
