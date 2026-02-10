@@ -381,7 +381,6 @@
 
         <div class="controls">
           <button id="spinBtn" class="primary">Spin!!</button>
-          <button id="clearLogBtn">Clear Results</button>
         </div>
       </div>
     </section>
@@ -417,13 +416,13 @@
       <div class="modalBody">
         <div class="row">
           <div class="field">
-            <div class="hint">Enter your name, then hit <b>Remove</b> to save your name + item and remove that item from the wheel.</div>
+            <div class="hint">Enter your name, then hit <b>Lock it in</b> to save your name + item and remove that item from the wheel.</div>
             <input id="nameInput" type="text" placeholder="Your name (e.g., Vani)" autocomplete="off" />
           </div>
         </div>
         <div class="actions">
-          <button id="respinBtn">Respin (keep item)</button>
-          <button id="removeBtn" class="primary">Remove (save + delete)</button>
+          <button id="respinBtn">Respin</button>
+          <button id="removeBtn" class="primary">Lock it in</button>
         </div>
       </div>
     </div>
@@ -657,7 +656,6 @@
      * Spin Logic
      ********************/
     const spinBtn = document.getElementById("spinBtn");
-    const clearLogBtn = document.getElementById("clearLogBtn");
 
     spinBtn.addEventListener("click", () => {
       if(isSpinning) return;
@@ -679,16 +677,6 @@
 
 
 
-clearLogBtn.addEventListener("click", async () => {
-  try{
-    const r = await apiClearResults();
-    if(!r.ok) throw new Error(r.error || "clear failed");
-    toast("Results cleared for everyone.");
-    await syncFromSheet();
-  } catch {
-    toast("Clear failed. Check API.");
-  }
-});
 
 
 
@@ -696,7 +684,6 @@ clearLogBtn.addEventListener("click", async () => {
       isSpinning = true;
       lastWinner = null;
       spinBtn.disabled = true;
-      clearLogBtn.disabled = true;
 
       // Kick off with a randomized velocity; add guaranteed minimum rotations
       const n = entries.length;
@@ -741,7 +728,6 @@ clearLogBtn.addEventListener("click", async () => {
         openModal(winner);
 
         spinBtn.disabled = false;
-        clearLogBtn.disabled = false;
         return;
       }
 
